@@ -4,6 +4,6 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    network test;
+    network run;
     return a.exec();
 }

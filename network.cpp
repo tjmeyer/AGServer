@@ -40,6 +40,7 @@ network::network(QObject *parent) : QObject(parent)
     connect(server, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(serverError(QAbstractSocket::SocketError)));
 }
 
+// authenticated users can use this after logging in.
 void network::authReader()
 {
     QTextStream out(stdout);
@@ -51,12 +52,18 @@ void network::authReader()
         QJsonObject packet = doc.object();
         switch (packet.value("type").toInt())
         {
-        case network::CONNECTION_CHECK:
-            out << "CONNECTION CHECK\n";
+        case packetType::CONNECTION_CHECK:
             // ping back
             packet.empty();
             packet.insert(QString("type"), CONNECTION_CHECK);
             socket->write(QJsonDocument(packet).toJson());
+            break;
+        case packetType::SYSTEM_MAP:
+            QJsonObject packet;
+            if(packet.contains("id"))
+            {
+                int id = packet.value("id").toInt();
+            }
             break;
         }
     }
@@ -164,7 +171,16 @@ void network::loginRequestor()
             }
             break;
         case CONNECTION_CHECK:
-            out << "CONNECTION CHECK\n";
+            // ping back
+            packet.empty();
+            packet.insert(QString("type"), CONNECTION_CHECK);
+            socket->write(QJsonDocument(packet).toJson());
+            break;
+        default:
+            // not authorized to ask anything else of the server until authentication
+            QJsonObject packet;
+            packet.insert(QString("type"), QJsonValue(packetType::UNAUTHORIZED));
+            socket->write(QJsonDocument(packet).toJson());
             break;
         }
     }

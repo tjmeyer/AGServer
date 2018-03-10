@@ -23,8 +23,13 @@ public:
         UNDEFINED = 0,
         LOGIN_REQUEST = 1,
         CONNECTION_CHECK = 2,
-        SECTOR_MAP = 3
+        SECTOR_MAP = 3,
+        SYSTEM_MAP = 4,
+        UNAUTHORIZED = 5
     };
+
+private:
+    void sendNotAuthorizedMessage(QTcpSocket* user);
 
 signals:
     void userLoggedIn(QString username);
