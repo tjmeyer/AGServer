@@ -1,0 +1,12 @@
+# Executeables
+*.exe
+
+# Makefiles
+Makefile*
+
+# Release or debug directories
+release/*
+debug/*
+
+# stash files
+*.stash
