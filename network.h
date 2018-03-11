@@ -25,7 +25,8 @@ public:
         CONNECTION_CHECK = 2,
         SECTOR_MAP = 3,
         SYSTEM_MAP = 4,
-        UNAUTHORIZED = 5
+        UNAUTHORIZED = 5,
+        SYSTEM_REQUEST = 6
     };
 
 private:
