@@ -8,6 +8,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QList>
+#include "network_messages.h"
 
 class network : public QObject
 {
@@ -18,16 +19,8 @@ public:
     QTcpServer* server;
     QMap<QTcpSocket*, QHostAddress> connectedUsers;
     QMap<QTcpSocket*, QString> authUsers; // key: socket id, value: username (for db lookups)
-
-    enum packetType{
-        UNDEFINED = 0,
-        LOGIN_REQUEST = 1,
-        CONNECTION_CHECK = 2,
-        SECTOR_MAP = 3,
-        SYSTEM_MAP = 4,
-        UNAUTHORIZED = 5,
-        SYSTEM_REQUEST = 6
-    };
+    bool databaseInit();
+    QSqlQuery dbExec(QString sql);
 
 private:
     void sendNotAuthorizedMessage(QTcpSocket* user);
@@ -36,13 +29,25 @@ signals:
     void userLoggedIn(QString username);
 
 public slots:
-    void authReader(); // only called by authenticated users for game use
+    // connection and disconnection handlers
     void userConnected();
     void userDisconnected();
+
+    // packet receivers and switches
+    void loginRequestor(); // only slot to be connected to unauthenticated sockets
+    void authReader(); // only called by authenticated users for gameplay use
+
+    // moves a client socket from the loginRequestor slot to the authReader slot
+    // if authentication is successful
+    bool authenticate(QTcpSocket* socket, QString username, QString password);
+
+    // database wrappers
+    QJsonArray getPlanets(QString star_id);
+    QJsonObject getStar(QString star_id);
+    QJsonObject getSystem(QString id);
+
     void serverError(QAbstractSocket::SocketError error);
     void socketError(QAbstractSocket::SocketError error);
-    void loginRequestor(); // only slot to be connected to unauthenticated sockets
-    bool authenticate(QTcpSocket* socket, QString username, QString password);
 
 };
 

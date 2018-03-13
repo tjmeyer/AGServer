@@ -19,4 +19,5 @@ SOURCES += main.cpp \
     network.cpp
 
 HEADERS += \
-    network.h
+    network.h \
+    network_messages.h
