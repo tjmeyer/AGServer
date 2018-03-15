@@ -154,16 +154,14 @@ void network::userDisconnected()
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
     if(socket->isValid())
     {
-        QTextStream out(stdout);
 
         if(connectedUsers.remove(socket))
         {
-            out << "Disconnected: " << socket->peerAddress().toString() << endl;
             disconnect(socket, SIGNAL(readyRead()), this, SLOT(loginRequestor()));
         }
         if(authUsers.contains(socket))
         {
-            out << "Logged out: " << authUsers.value(socket) << endl;
+            emit userLoggedOut(authUsers.value(socket));
             authUsers.remove(socket);
             QObject::disconnect(socket, &QTcpSocket::readyRead, this, &network::authReader);
         }
@@ -293,31 +291,20 @@ QJsonArray network::getPlanets(QString star_id)
         QJsonValue planet_lvl(query.value(1).toString());
         QJsonValue planet_name(query.value(2).toString());
         QJsonValue planet_sprite(query.value(3).toString());
-        QJsonValue planet_speed(query.value(4).toDouble());
+        QJsonValue planet_speed(query.value(4).toDouble()); // this is in DAYS per orbit, an INT is stored in the db
         QJsonValue planet_last_progress(query.value(5).toDouble());
         QJsonValue planet_type(query.value(6).toString());
         QJsonValue planet_radius(query.value(7).toDouble());
         QDateTime planet_last_update(query.value(8).toDateTime());
         QJsonValue planet_distance(query.value(9).toDouble());
         planet_last_update.setTimeSpec(Qt::UTC);
-        // speed is days per orbit.
-        // first calculate the amount of time that has passed since the last update.
-        // precision is up to seconds, no need for ms.
 
         // get offset from database retrieved datetime
         QDateTime timeNow = QDateTime::currentDateTimeUtc();
-        out << planet_name.toString() << ":\n";
-        out << "\tTime Now: \t" << timeNow.toString() << "\ttimezone: " << timeNow.timeZoneAbbreviation() << endl;
-        out << "\tLast Update: \t" << planet_last_update.toUTC().toString() << "\ttimezone: " << planet_last_update.timeZoneAbbreviation() << endl;
         qint64 secondsDiff = planet_last_update.secsTo(timeNow);
-        out << "\tTime (s) since last update:" <<secondsDiff << endl;
-        double orbitTime = planet_speed.toDouble() * 24 * 3600; // convert to number of seconds for 1 orbit
-        out << "\tPlanet Speed: " << planet_speed.toDouble() << endl;
-        out << "\tOrbit Time in seconds: " << orbitTime << endl;
+        double orbitTime = planet_speed.toInt() * 24 * 3600; // convert to number of seconds for 1 orbit
         double progress = secondsDiff / orbitTime; // percentage of how far we've moved in orbit since last update (.01 = 1% of a circle).
-        out << "\tProgress: " << progress << endl;
         progress = planet_last_progress.toDouble() + progress;
-        out << "\tCalculated Progress: " << progress << endl;
         while(progress >= 1.0000000)
         {
             progress -= 1.0000;

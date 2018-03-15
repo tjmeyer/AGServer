@@ -23,10 +23,11 @@ public:
     QSqlQuery dbExec(QString sql);
 
 private:
-    void sendNotAuthorizedMessage(QTcpSocket* user);
+
 
 signals:
     void userLoggedIn(QString username);
+    void userLoggedOut(QString username);
 
 public slots:
     // connection and disconnection handlers
