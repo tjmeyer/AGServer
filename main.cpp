@@ -1,9 +1,9 @@
 #include <QCoreApplication>
-#include "network.h"
+#include "AresNetwork.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    network run;
+    AresNetwork run(12345);
     return a.exec();
 }
