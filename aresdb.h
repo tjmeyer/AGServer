@@ -36,14 +36,18 @@ public slots:
     QVariant insertSystem(QVariant sectorId, QString user_id = NULL);
     QVariant insertStar();
     QVariant insertTechTree(QString username);
-    void insertShip(QString user_id, QString type, QVariant x, QVariant y);
+    QVariant insertPlanet(QVariant star_id);
+    QVariant insertPlanet(QVariant star_id, QVariant distance);
+    QVariant insertShip(QVariant system_id, QString type, QVariant x, QVariant y, QString user_id = QString());
 
     // updates
-    void updateUserPassword(QString username, QString password, QString newPassword);
+    // true on successful update.
+    bool updateUserPassword(QString username, QString password, QString newPassword);
 
 private:
     QVariant findSector(); // only used during player registration
     QVariant insertSector(); // dangerous and must be used wisely.
+    double doubleRandomRange(double min, double max);
 
 signals:
     void connected();

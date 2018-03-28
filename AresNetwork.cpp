@@ -29,6 +29,14 @@ AresNetwork::AresNetwork(int port, QObject *parent) : QObject(parent)
     connect(server, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(serverError(QAbstractSocket::SocketError)));
 }
 
+void sendPacket(QTcpSocket* socket, QJsonObject packet)
+{
+    if(socket->isValid())
+    {
+        socket->write(QJsonDocument(packet).toJson());
+    }
+}
+
 // authenticated users can use this after logging in.
 void AresNetwork::authReader()
 {

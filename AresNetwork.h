@@ -21,6 +21,7 @@ public:
 signals:
     void userLoggedIn(QString username);
     void userLoggedOut(QString username);
+    void connectionCheck(QTcpSocket* socket);
 
 public slots:
     // connection and disconnection handlers

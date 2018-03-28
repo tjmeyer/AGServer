@@ -271,7 +271,29 @@ QVariant AresDb::insertSystem(QVariant sectorId, QString user_id)
 
     // create star
     QVariant starId = insertStar();
-    int image_index = QRandomGenerator::global()->bounded(7);
+    int planetNum = 0;
+    if(user_id.isNull())
+    {
+        planetNum = qrand() % 9 + 1; // 1 to 9 planets for non-home systems
+    }
+    else
+    {
+        planetNum = qrand() % 3 + 6; // 6 to 8 planets for new player home systems
+    }
+
+    // generate planets
+    double distanceMax = 1;
+    double distanceMin = .2;
+    double chosenDistance = doubleRandomRange(distanceMin, distanceMax);
+    for(int i = 0; i < planetNum; i++)
+    {
+        insertPlanet(starId, QVariant(chosenDistance));
+        distanceMin = chosenDistance;
+        distanceMax *= 2;
+        chosenDistance = doubleRandomRange(distanceMin, distanceMax);
+    }
+
+    int image_index = qrand() % 7;
     // are we adding a user or not?
     if(user_id.isNull())
     {
@@ -369,6 +391,44 @@ QVariant AresDb::insertTechTree(QString username)
     query = exec(sql);
     return query.lastInsertId();
 }
+QVariant AresDb::insertPlanet(QVariant star_id, QVariant distance)
+{
+    QVariant speed = qrand() % 1000 + 1;
+    QVariant type = qrand() % 3 + 1;
+    QVariant progress = doubleRandomRange(0.01, 0.99);
+    QVariant radius = doubleRandomRange(1000.0, 50000.0);
+    QVariant sprite_index;
+    switch (type.toInt()) {
+    case 1:
+        sprite_index = qrand() % 5;
+        break;
+    case 2:
+        sprite_index = qrand() % 8;
+        break;
+    case 3:
+        sprite_index = qrand() % 11;
+        break;
+    default:
+        sprite_index = 0;
+        break;
+    }
+    QString sql = "INSERT INTO planet (sprite_index, speed, progress, type, radius, star_id, distance)"
+          "VALUES ("+QString::number(sprite_index.toInt())+", "+
+            QString::number(speed.toInt()) + ", " +
+            QString::number(progress.toDouble()) + ", " +
+            QString::number(type.toInt()) + ", " +
+            QString::number(radius.toDouble()) + ", " +
+            QString::number(star_id.toInt()) + ", " +
+            QString::number(distance.toDouble())+ ")";
+    QSqlQuery query = exec(sql);
+    return query.lastInsertId();
+}
+
+QVariant AresDb::insertPlanet(QVariant star_id)
+{
+    QVariant distance = doubleRandomRange(0.1, 50);
+    return insertPlanet(star_id, distance);
+}
 
 QVariant AresDb::insertSector()
 {
@@ -402,6 +462,12 @@ QVariant AresDb::insertSector()
     query = exec(sql);
 
     return query.lastInsertId();
+}
+
+double AresDb::doubleRandomRange(double min, double max)
+{
+    double f = (double)qrand() / RAND_MAX;
+    return min + f * (max - min);
 }
 
 // FIND SECTOR
@@ -440,14 +506,22 @@ QVariant AresDb::findSector()
     return sectorId;
 }
 
-void AresDb::insertShip(QString user_id, QString type, QVariant x, QVariant y)
+QVariant AresDb::insertShip(QVariant system_id, QString type, QVariant x, QVariant y, QString user_id)
 {
 
 }
 
-void AresDb::updateUserPassword(QString username, QString password, QString newPassword)
+bool AresDb::updateUserPassword(QString username, QString password, QString newPassword)
 {
-
+    bool success = false;
+    if(authenticate(username, password))
+    {
+        QString sql = "UPDATE users SET password = '" + QCryptographicHash::hash(newPassword.toUtf8(), QCryptographicHash::Sha1).toHex() +
+                "' WHERE username = '" + username +"'";
+        QSqlQuery query = exec(sql);
+        success = true;
+    }
+    return success;
 }
 
 bool AresDb::authenticate(QString username, QString password)
